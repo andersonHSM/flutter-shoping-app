@@ -3,13 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shopping_app/providers/cart.dart';
 import 'package:shopping_app/providers/orders.dart';
-import 'package:shopping_app/providers/products_provider.dart';
+import 'package:shopping_app/providers/products.dart';
 
 import 'package:shopping_app/utils/app_routes.dart';
 import 'package:shopping_app/views/cart_screen.dart';
 import 'package:shopping_app/views/order_screen.dart';
 import 'package:shopping_app/views/product_detail_screen.dart';
+import 'package:shopping_app/views/product_form_screen.dart';
 import 'package:shopping_app/views/products_overview._screen.dart';
+import 'package:shopping_app/views/products_screen.dart';
 
 void main() => runApp(MyApp());
 
@@ -19,7 +21,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => ProductsProvider(),
+          create: (_) => Products(),
         ),
         ChangeNotifierProvider(
           create: (context) => Cart(),
@@ -40,6 +42,8 @@ class MyApp extends StatelessWidget {
           AppRoutes.PRODUCT_DETAIL: (ctx) => ProductDetailScreen(),
           AppRoutes.CART: (ctx) => CartScreen(),
           AppRoutes.ORDERS: (ctx) => OrdersScreen(),
+          AppRoutes.PRODUCTS: (ctx) => ProductsScreen(),
+          AppRoutes.PRODUCT_FORM: (ctx) => ProductFormScreen(),
         },
       ),
     );

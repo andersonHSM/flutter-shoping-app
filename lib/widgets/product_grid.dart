@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shopping_app/providers/products_provider.dart';
-import 'package:shopping_app/widgets/product_item.dart';
+import 'package:shopping_app/providers/products.dart';
+import 'package:shopping_app/widgets/product_grid_item.dart';
 
 class ProductGrid extends StatelessWidget {
   final bool _showFavoriteOnly;
@@ -10,7 +10,7 @@ class ProductGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final productsProvider = Provider.of<ProductsProvider>(context);
+    final productsProvider = Provider.of<Products>(context);
 
     final products = _showFavoriteOnly
         ? productsProvider.favoriteItems
@@ -28,7 +28,7 @@ class ProductGrid extends StatelessWidget {
       itemBuilder: (ctx, index) {
         return ChangeNotifierProvider.value(
           value: products[index],
-          child: ProductItem(),
+          child: ProductGridItem(),
         );
       },
     );
