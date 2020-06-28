@@ -45,6 +45,17 @@ class ProductItem extends StatelessWidget {
             icon: Icon(Icons.shopping_cart),
             color: Theme.of(context).accentColor,
             onPressed: () {
+              Scaffold.of(context).hideCurrentSnackBar();
+              Scaffold.of(context).showSnackBar(SnackBar(
+                content: Text('Produto adcionado com sucesso!'),
+                duration: Duration(seconds: 2),
+                action: SnackBarAction(
+                  label: "Desfazer",
+                  onPressed: () {
+                    _cart.remoteSingleItem(_product.id);
+                  },
+                ),
+              ));
               _cart.addItem(_product);
             },
           ),
