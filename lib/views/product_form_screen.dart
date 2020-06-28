@@ -67,7 +67,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     return isValidProtocol && endsWithPngJpgJpeg;
   }
 
-  _saveForm() {
+  Future<void> _saveForm() async {
     setState(() {
       _sendingRequest = true;
     });
@@ -87,17 +87,17 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     final _products = Provider.of<Products>(context, listen: false);
 
     if (_formData['id'] == null) {
-      _products.addProduct(newProduct).then((_) {
-        setState(() {
-          _sendingRequest = false;
-        });
-        Navigator.of(context).pop();
-      }).catchError((_) {
-        return showDialog<Null>(
+      try {
+        await _products.addProduct(newProduct);
+      } catch (error) {
+        await showDialog<Null>(
             context: context,
             builder: (ctx) {
               return AlertDialog(
                 title: Text('Ocorreu um erro'),
+                content: Text(
+                  'Houve um erro inesperado ao realizar a requisição.',
+                ),
                 actions: <Widget>[
                   FlatButton(
                     onPressed: () {
@@ -107,15 +107,13 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   )
                 ],
               );
-            }).then(
-          (_) {
-            setState(() {
-              _sendingRequest = false;
             });
-            Navigator.of(context).pop();
-          },
-        );
-      });
+      } finally {
+        setState(() {
+          _sendingRequest = false;
+        });
+        Navigator.of(context).pop();
+      }
     } else {
       _products.updateProduct(newProduct);
       Navigator.of(context).pop();
