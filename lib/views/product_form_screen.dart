@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -86,37 +84,37 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
     final _products = Provider.of<Products>(context, listen: false);
 
-    if (_formData['id'] == null) {
-      try {
+    try {
+      if (_formData['id'] == null) {
         await _products.addProduct(newProduct);
-      } catch (error) {
-        await showDialog<Null>(
-            context: context,
-            builder: (ctx) {
-              return AlertDialog(
-                title: Text('Ocorreu um erro'),
-                content: Text(
-                  'Houve um erro inesperado ao realizar a requisição.',
-                ),
-                actions: <Widget>[
-                  FlatButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Text('Ok'),
-                  )
-                ],
-              );
-            });
-      } finally {
-        setState(() {
-          _sendingRequest = false;
-        });
+        Navigator.of(context).pop();
+      } else {
+        await _products.updateProduct(newProduct);
         Navigator.of(context).pop();
       }
-    } else {
-      _products.updateProduct(newProduct);
-      Navigator.of(context).pop();
+    } catch (error) {
+      await showDialog<Null>(
+          context: context,
+          builder: (ctx) {
+            return AlertDialog(
+              title: Text('Ocorreu um erro'),
+              content: Text(
+                'Houve um erro inesperado ao realizar a requisição.',
+              ),
+              actions: <Widget>[
+                FlatButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Ok'),
+                )
+              ],
+            );
+          });
+    } finally {
+      setState(() {
+        _sendingRequest = false;
+      });
     }
   }
 

@@ -1,15 +1,14 @@
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shopping_app/exceptions/http_exception.dart';
 
 import 'package:shopping_app/providers/product.dart';
 
-import 'package:shopping_app/data/DUMMY_DATA.dart';
-
 class Products with ChangeNotifier {
-  List<Product> _items = DUMMY_PRODUCTS;
+  final _baseUrl = 'https://flutter-shop-2a75f.firebaseio.com/products';
+  List<Product> _items = [];
 
   List<Product> get items => [..._items];
 
@@ -19,13 +18,34 @@ class Products with ChangeNotifier {
     return _items.where((prod) => prod.isFavorite).toList();
   }
 
+  Future<void> fetchAllProducts() async {
+    final response = await http.get("$_baseUrl.json");
+    Map<String, dynamic> data = json.decode(response.body);
+    if (data == null || data.isEmpty) {
+      return;
+    }
+    _items.clear();
+
+    data.forEach((prodId, product) {
+      _items.add(Product(
+        description: product['description'],
+        imageUrl: product['imageUrl'],
+        price: product['price'],
+        title: product['title'],
+        isFavorite: product['isFavorite'],
+        id: prodId,
+      ));
+    });
+
+    notifyListeners();
+  }
+
   Future<void> addProduct(Product product) async {
-    const url = 'https://flutter-shop-2a75f.firebaseio.com/products.json';
-    var response = await http.post(url,
+    var response = await http.post("$_baseUrl.json",
         body: json.encode(
           {
             'title': product.title,
-            'description': product.price,
+            'description': product.description,
             'price': product.price,
             'imageUrl': product.imageUrl,
             'isFavorite': product.isFavorite,
@@ -44,7 +64,7 @@ class Products with ChangeNotifier {
     notifyListeners();
   }
 
-  void updateProduct(Product product) {
+  Future<void> updateProduct(Product product) async {
     if (product == null || product.id == null) {
       return;
     }
@@ -55,38 +75,37 @@ class Products with ChangeNotifier {
       return;
     }
 
+    await http.patch("$_baseUrl/${product.id}.json",
+        body: json.encode({
+          'description': product.description,
+          'imageUrl': product.imageUrl,
+          'price': product.price,
+          'title': product.title,
+        }));
     _items[index] = product;
 
     notifyListeners();
   }
 
-  void deleteProduct(String id) {
+  Future<void> deleteProduct(String id) async {
     final int index = _items.indexWhere((prod) => prod.id == id);
 
     if (index < 0) {
       return;
     }
-    _items.removeWhere((prod) => prod.id == id);
+
+    final product = _items[index];
+    _items.remove(product);
     notifyListeners();
+
+    final response = await http.delete("$_baseUrl/${product.id}.json");
+
+    if (response.statusCode >= 400) {
+      _items.insert(index, product);
+      notifyListeners();
+      throw HttpException(
+        'Ocorreu um erro na exclusão do produto.',
+      );
+    }
   }
 }
-
-// List<Product> get items {
-//   if (_showFavoriteOnly) {
-//     return _items.where((product) => product.isFavorite).toList();
-//   }
-
-//   return [..._items];
-// }
-
-// bool _showFavoriteOnly = false;
-// void showFavoriteOnly() {
-//   _showFavoriteOnly = true;
-//   notifyListeners();
-// }
-
-// void showAll() {
-//   _showFavoriteOnly = false;
-//   notifyListeners();
-// }
-// }
