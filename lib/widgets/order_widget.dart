@@ -31,7 +31,7 @@ class _OrderWidgetState extends State<OrderWidget> {
               subtitle: Text(
                 DateFormat('dd/MM/yyyy hh:mm').format(widget._order.date),
               ),
-              trailing: Icon(Icons.expand_more),
+              trailing: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
             ),
           ),
           if (_expanded) Divider(),

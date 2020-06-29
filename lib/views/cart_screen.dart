@@ -4,7 +4,13 @@ import 'package:shopping_app/providers/cart.dart';
 import 'package:shopping_app/providers/orders.dart';
 import 'package:shopping_app/widgets/cart_item_widget.dart';
 
-class CartScreen extends StatelessWidget {
+class CartScreen extends StatefulWidget {
+  @override
+  _CartScreenState createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
+  bool _sendingBuyRequest = false;
   @override
   Widget build(BuildContext context) {
     final _cart = Provider.of<Cart>(context);
@@ -44,16 +50,50 @@ class CartScreen extends StatelessWidget {
                   Spacer(),
                   FlatButton(
                     onPressed: _cart.itemsCount > 0
-                        ? () {
-                            Provider.of<Orders>(context, listen: false)
-                                .addOrder(
-                              _cartItems,
-                              _cart.cartTotalPrice,
-                            );
-                            _cart.clear();
+                        ? () async {
+                            setState(() {
+                              _sendingBuyRequest = true;
+                            });
+                            try {
+                              await Provider.of<Orders>(context, listen: false)
+                                  .addOrder(
+                                _cartItems,
+                                _cart.cartTotalPrice,
+                              );
+                              _cart.clear();
+                              Navigator.of(context).pop();
+                            } catch (error) {
+                              print(error);
+                              await showDialog(
+                                  context: context,
+                                  builder: (ctx) {
+                                    return AlertDialog(
+                                      title: Text('Erro inesperado'),
+                                      content: Text(
+                                        "Por favor, tente novamente ou retorne mais tarde.",
+                                      ),
+                                      actions: <Widget>[
+                                        FlatButton(
+                                          child: Text('Retornar'),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                        )
+                                      ],
+                                    );
+                                  });
+                            } finally {
+                              setState(() {
+                                _sendingBuyRequest = false;
+                              });
+                            }
                           }
                         : null,
-                    child: Text('Comprar'),
+                    child: _sendingBuyRequest
+                        ? CircularProgressIndicator(
+                            strokeWidth: 2,
+                          )
+                        : Text('Comprar'),
                     textColor: Theme.of(context).primaryColor,
                   )
                 ],
