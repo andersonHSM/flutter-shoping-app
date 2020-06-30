@@ -7,32 +7,43 @@ import 'package:shopping_app/exceptions/http_exception.dart';
 import 'package:shopping_app/providers/product.dart';
 
 class Products with ChangeNotifier {
-  final _baseUrl = 'https://flutter-shop-2a75f.firebaseio.com/products';
+  String _token;
+  String _userId;
+  final _baseUrl = 'https://flutter-shop-2a75f.firebaseio.com/';
   List<Product> _items = [];
+
+  Products(this._token, this._userId, this._items);
 
   List<Product> get items => [..._items];
 
   int get itemsCount => _items.length;
 
   List<Product> get favoriteItems {
+    //http.get("$_baseUrl/");
     return _items.where((prod) => prod.isFavorite).toList();
   }
 
   Future<void> fetchAllProducts() async {
-    final response = await http.get("$_baseUrl.json");
+    final response = await http.get("$_baseUrl/products.json?auth=$_token");
+    final favResponse = await http.get(
+        "https://flutter-shop-2a75f.firebaseio.com/userFavorites/$_userId.json?auth=$_token");
     Map<String, dynamic> data = json.decode(response.body);
+    final Map<String, dynamic> favMap = json.decode(favResponse.body);
+
     if (data == null || data.isEmpty) {
       return;
     }
     _items.clear();
 
     data.forEach((prodId, product) {
+      final isFavorite = favMap == null ? false : favMap[prodId] ?? false;
+
       _items.add(Product(
         description: product['description'],
         imageUrl: product['imageUrl'],
         price: product['price'],
         title: product['title'],
-        isFavorite: product['isFavorite'],
+        isFavorite: isFavorite,
         id: prodId,
       ));
     });
@@ -41,14 +52,13 @@ class Products with ChangeNotifier {
   }
 
   Future<void> addProduct(Product product) async {
-    var response = await http.post("$_baseUrl.json",
+    var response = await http.post("$_baseUrl/products.json?auth=$_token",
         body: json.encode(
           {
             'title': product.title,
             'description': product.description,
             'price': product.price,
             'imageUrl': product.imageUrl,
-            'isFavorite': product.isFavorite,
           },
         ));
 
@@ -75,7 +85,7 @@ class Products with ChangeNotifier {
       return;
     }
 
-    await http.patch("$_baseUrl/${product.id}.json",
+    await http.patch("$_baseUrl/products/${product.id}.json?auth=$_token",
         body: json.encode({
           'description': product.description,
           'imageUrl': product.imageUrl,
@@ -98,7 +108,8 @@ class Products with ChangeNotifier {
     _items.remove(product);
     notifyListeners();
 
-    final response = await http.delete("$_baseUrl/${product.id}.json");
+    final response =
+        await http.delete("$_baseUrl/products/${product.id}.json?auth=$_token");
 
     if (response.statusCode >= 400) {
       _items.insert(index, product);

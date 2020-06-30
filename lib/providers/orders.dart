@@ -21,6 +21,8 @@ class Order {
 class Orders with ChangeNotifier {
   final _baseUrl = "https://flutter-shop-2a75f.firebaseio.com/orders";
   List<Order> _items = [];
+  String _token;
+  String _userId;
 
   List<Order> get items {
     return [..._items];
@@ -30,12 +32,15 @@ class Orders with ChangeNotifier {
     return _items.length;
   }
 
+  Orders([this._token, this._userId, this._items = const []]);
+
   Future<void> fetchOrders() async {
-    final response = await http.get("$_baseUrl.json");
+    final response = await http.get("$_baseUrl/$_userId.json?auth=$_token");
     final Map<String, dynamic> _data = json.decode(response.body);
     _items.clear();
     notifyListeners();
 
+    if (_data == null) return;
     _data.forEach((orderId, order) {
       _items.add(
         Order(
@@ -62,7 +67,7 @@ class Orders with ChangeNotifier {
     // });
     final date = DateTime.now();
     final response = await http.post(
-      "$_baseUrl.json",
+      "$_baseUrl/$_userId.json?auth=$_token",
       body: json.encode(
         {
           'totalPrice': total,

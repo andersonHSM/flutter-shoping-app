@@ -10,8 +10,12 @@ class OrdersScreen extends StatefulWidget {
 }
 
 class _OrdersScreenState extends State<OrdersScreen> {
-  Future<void> _fetchOrder() {
-    return Provider.of<Orders>(context, listen: false).fetchOrders();
+  bool _isLoading = true;
+  Future<void> _fetchOrder() async {
+    await Provider.of<Orders>(context, listen: false).fetchOrders();
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   @override
@@ -28,14 +32,18 @@ class _OrdersScreenState extends State<OrdersScreen> {
       appBar: AppBar(
         title: Text('Meus pedidos!'),
       ),
-      body: RefreshIndicator(
-        onRefresh: _fetchOrder,
-        child: ListView.builder(
-            itemCount: _orders.itemsCount,
-            itemBuilder: (ctx, index) {
-              return OrderWidget(_orders.items[index]);
-            }),
-      ),
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : RefreshIndicator(
+              onRefresh: _fetchOrder,
+              child: ListView.builder(
+                  itemCount: _orders.itemsCount,
+                  itemBuilder: (ctx, index) {
+                    return OrderWidget(_orders.items[index]);
+                  }),
+            ),
       drawer: AppDrawer(),
     );
   }
